@@ -7,7 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.spendwise.model.Transaction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SQLiteHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "SpendWise.db";
@@ -52,7 +54,28 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return list;
     }
 
+    public int update(Transaction t) {
+        ContentValues v = new ContentValues();
+        v.put("title", t.getTitle());
+        v.put("category", t.getCategory());
+        v.put("price", t.getPrice());
+        v.put("date", t.getDate());
+        v.put("note", t.getNote());
+        return getWritableDatabase().update("transactions", v, "id = ?", new String[]{String.valueOf(t.getId())});
+    }
+
     public int delete(int id) {
         return getWritableDatabase().delete("transactions", "id = ?", new String[]{String.valueOf(id)});
+    }
+
+    public Map<String, Double> getCategoryTotals() {
+        Map<String, Double> map = new HashMap<>();
+        String query = "SELECT category, SUM(price) FROM transactions GROUP BY category";
+        Cursor c = getReadableDatabase().rawQuery(query, null);
+        while (c.moveToNext()) {
+            map.put(c.getString(0), c.getDouble(1));
+        }
+        c.close();
+        return map;
     }
 }
